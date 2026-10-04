@@ -1,0 +1,14 @@
+# Project conventions
+- Python 3.11. Use pandas, scikit-learn, streamlit. Keep dependencies minimal.
+- All data is SYNTHETIC. Never assume access to real customer data.
+- Structure: data generation in src/data_gen.py, business logic/model in src/core.py,
+  evaluation in src/eval.py, UI in app.py.
+- Prefer simple, explainable approaches first (rules, logistic regression) before complex models.
+- Every model or ranking must expose WHY (feature contributions, reasons, or cited sources).
+- Write small functions with docstrings. No notebooks.
+- After each change, run the code and show a sample of output.
+- Flag any assumption about banking data or regulation explicitly in comments.
+- Python environment: ~/Source/ocbc-env/.venv (already activated). Install anything new with `uv pip install`.
+- This is an Intel Mac: never install torch or sentence-transformers. For semantic search use model2vec (minishlab/potion-base-8M).
+- Load secrets with `from dotenv import load_dotenv; load_dotenv()`. Never print or hard-code API keys.
+- Don't run `streamlit run` yourself — I run the app in a separate terminal tab; it reloads on save.
