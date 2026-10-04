@@ -10,5 +10,5 @@
 - Flag any assumption about banking data or regulation explicitly in comments.
 - Python environment: ~/Source/ocbc-env/.venv (already activated). Install anything new with `uv pip install`.
 - This is an Intel Mac: never install torch or sentence-transformers. For semantic search use model2vec (minishlab/potion-base-8M).
-- Load secrets with `from dotenv import load_dotenv; load_dotenv()`. Never print or hard-code API keys.
+- Load secrets with `from dotenv import load_dotenv, find_dotenv; load_dotenv(find_dotenv(usecwd=True))`. Never print or hard-code API keys.
 - Don't run `streamlit run` yourself — I run the app in a separate terminal tab; it reloads on save.
