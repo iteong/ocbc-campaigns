@@ -1,6 +1,6 @@
 # Project conventions
 - Python 3.11. Use pandas, scikit-learn, streamlit. Keep dependencies minimal.
-- All data is SYNTHETIC. Never assume access to real customer data.
+- All customer data is SYNTHETIC. Real product facts are in data/products_clean/products.json (cleaned from OCBC's public API JSON in data/ocbc_products/, pulled 5 Oct 2026, indicative and possibly outdated). Use the clean file, not the raw JSON. Cite product_name and source_file, and never present its rates as current.
 - Structure: data generation in src/data_gen.py, business logic/model in src/core.py,
   evaluation in src/eval.py, UI in app.py.
 - Prefer simple, explainable approaches first (rules, logistic regression) before complex models.
