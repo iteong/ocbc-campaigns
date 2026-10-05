@@ -1,0 +1,42 @@
+{
+  "CASAAccountsList": [
+    {
+      "subCategoryList": [
+        {
+          "SubCategoryName": "Current Account",
+          "product": [
+            {
+              "productName": "360 Account",
+              "remarks": "<div id=\"Remark for 360 Account\"> <span>Access, track & manage your money easily</span> <ul> <li>Online Banking: <ul> <li>Easy transfers and payments:Transfer funds almost instantly between banks with Fast and Secure Transfers (FAST). Pay any bank's credit card bills online or transfer money locally and to overseas accounts.</li> <li>Track your spending by category:Know exactly where your money is going as your spending is automatically sorted by category Money In$ights.</li> <li>Online security guarantee:Guaranteed a full refund of any money lost due to fraud via Online Banking.</li> </ul> </li> <li>Access cash at over 2,000 withdrawal locations islandwide: <ul> <li>Convenient locations:All OCBC and UOB ATMs, participating 7-Eleven stores and NETS merchants.</li> <li>Make NETS purchases:Make purchases with your OCBC YES! Card or ATM Card where NETS is accepted.</li> </ul> </li> <li>Sunday at OCBC: <ul> <li>Open every day at 19 branches from 11am to 7pm:A new banking experience awaits you at our 19 full-service 'Sunday at OCBC' branches.</li> </ul> </li> </ul> </div>",
+              "benefits": "<div id=\"Benefit for 360 Account\"> <span>Bonus interest on the first S$70,000 of your account balance when you do all or any of these:</span> <ul> <li>1.2% per year - Credit your salary of at least S$2,000 through GIRO.</li> <li>0.3% per year - Pay at least 3 bills online or through GIRO with a total amount of at least S$150.</li> <li>0.3% per year - Spend at least S$500 on OCBC Credit Cards.</li> <li>1.2% per year - Insure or invest with OCBC. Earn 0.6% or 1.2% for 12 months, depending on the qualifying amount.</li> <li>1% per year - Earn this extra bonus on the first S$70,000 if your account balance is S$200,000 and above</li> <li>You will earn a base interest of 0.05% per year on your entire account balance.</li> </ul> </div>",
+              "websiteLink": "https://www.ocbc.com/personal-banking/accounts/360-account.html?pid=sg:en:others:accounts:360Account:Nov16:internal:depositsLP:::::",
+              "apply": "<div id=\"Apply for 360 Account\"> <ul> <li>Online (For Singaporeans and Singapore PRs only):Open your account anywhere. Account is opened within 5 working days.: <ul> <li>NRIC</li> <li>SIGNATURE</li> <li>SUBMIT SUPPORTING DOCUMENTS: <ul> <li>Mail in your documents to us at:ACCOUNT SERVICES BRAS BASAH POST OFFICE LOCKED BAG SERVICE NO. 8 SINGAPORE 911886 or Apply online at https://openaccount.ocbc.com/ or download the OCBC Open Account App</li> <li>If you would like to be offered an OCBC Credit Card as well, login to CPF Online Services using your SingPass username and password.</li> </ul> </li> <li>3 simple steps to open an account. For existing OCBC Savings or Current Account customers, your account will be opened within 1 working day. Otherwise, you will receive your account number and Online Banking access within 5 working days. Please make a deposit when you receive your account number. Transfers funds almost instantly to your OCBC 360 Account from any other participating bank with Fast and Secure Transfers (FAST).</li> </ul> </li> <li>At a branch <ul> <li>NRIC for Singaporeans and Singapore PRs.</li> <li>Foreigners need to bring:Passport</li> <li>Foreigners need to bring:Employment Pass (EP) or S-Pass</li> <li>S$1,000 for initial deposit</li> <li>Include any one of the following documents:Phone bill,Half-yearly CPF statement,Any bank statement</li> </ul> </li> <li>Online Banking:For existing OCBC Savings or Current Account Customers. Account is opened within 2-3 working days</li> </ul> </div>",
+              "eligibility": "<ul> <li>Minimum Age : 18 years old</li> <li>Nationality : Singaporeans, Permanent Residents, E-Pass and S-Pass Holders</li> </ul>",
+              "initialDeposit": "S$1,000",
+              "minimumBalance": "S$3,000 ( Minimum average daily balance for the month )",
+              "feesAndCharges": "S$2 (waived for the first year)",
+              "monthlyStatements": "e-Statement",
+              "productDescription": "Earn higher interest rates when you credit your salary, transact, insure and invest."
+            },
+            {
+              "productName": "FRANK Account",
+              "remarks": "",
+              "benefits": "<div id=\"Benefit for Frank Account\"> <span>FRANK ACCOUNT:</span> <ul> <li>First S$10,000:0.20% per annum</li> <li>S$10,001 - S$100,000:0.30% per annum</li> <li>S$100,001 - S$500,000:0.40% per annum</li> <li>*For balances above S$500,000, there will be no interest given because we believe that your money can work harder with other higher-yielding OCBC Accounts!</li> </ul> <span>Regular Savings Account:</span> <ul> <li>Starts from 0.05% per annum</li> </ul> </div>",
+              "websiteLink": "http://www.frankbyocbc.com/products/accounts/frank-account/",
+              "apply": "<div id=\"Apply for Frank Account\"> <span>For Singaporean/ Singapore PR:</span> <ul> <li>If Existing OCBC customer: <ul> <li>NRIC only</li> </ul> </li> <li>If not existing OCBC customer: <ul> <li>NRIC</li> <li>(Only If mailing in application form)original Singapore phone bill/bank statement/utilities bill within the last 3 months showing resindential address OR Income tax notice of assessment</li> <li>If applying in person at branch, the proof of address is not required</li> </ul> </li> </ul> <span>For Foreigner residing in Singapore:</span> <ul> <li>If Existing OCBC customer: <ul> <li>Passport with 6 month validity</li> <li>Valid student/long term/ employment pass</li> </ul> </li> <li>If not existing OCBC customer: <ul> <li>Passport with 6 month validity</li> <li>Valid student/long term/ employment pass</li> <li>Last 3 months documents showing residential address OR Income tax notice of assessment</li> </ul> </li> </ul> </div>",
+              "eligibility": "<ul> <li>You need to be 16 years old and above.</li> <li>No minimum income is required.</li> </ul>",
+              "initialDeposit": "No initial deposit is needed.",
+              "minimumBalance": "no minimum balance",
+              "feesAndCharges": "If you are 26 years old and above, there is a monthly service fee of S$2 if your average daily balance for the month is less than S$1,000.",
+              "monthlyStatements": "",
+              "productDescription": "An account for youth age 16 to 26. It has no initial deposit and minimum balance requirement."
+            }
+          ],
+          "Description": "Provides a list of OCBC Transaction Accounts."
+        }
+      ],
+      "categoryName": "Current Account"
+    }
+  ],
+  "Disclaimer": "The data returned are indicative and are subjected to changes without prior notice. Please use the data at your own discretion and risk."
+}

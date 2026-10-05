@@ -1,0 +1,42 @@
+{
+  "CASAAccountsList": [
+    {
+      "subCategoryList": [
+        {
+          "SubCategoryName": "Foreign currency",
+          "product": [
+            {
+              "productName": "USD Current Account",
+              "remarks": "",
+              "benefits": "<div id=\"Benefit for USD Current Account\"> <ul> <li>Flexibility of issuing cheques in US Dollars</li> <li>Initial deposit US$1,000 via S$ cheque, deduction from your OCBC account, or one-time transfer from another bank</li> <li>This is a non-interest bearing account.</li> <li>Deposit in foreign currency notes is subject to minimum 1% commission-in-lieu or exchange. This fee is not applicable for deposits in S$.</li> </ul> </div>",
+              "websiteLink": "https://www.ocbc.com/personal-banking/accounts/usd-current-account.html?pid=sg:en:others:accounts:USDCurrentAccount:Nov16:internal:depositsLP:::::",
+              "apply": "<div id=\"Apply for USD Current Account\"> <ul> <li> Apply at any of our branches : <ul> <li>(for Singaporeans and Singapore PRs) NRIC</li> <li>(for Foreigners) Employment Pass (EP) or S-Pass or Student Pass</li> <li>(for Foreigners) Passport</li> <li>US$1,000 for initial deposit</li> <li>Additional documents : Include any one of the following documents:Phone bill,Half-yearly CPF statement,Any bank statement</li> </ul> </li> </ul> </div>",
+              "eligibility": "Singaporeans, Singapore PRs and foreigners age 18 and above",
+              "initialDeposit": "US$ 1,000 via S$ cheque,deduction from your OCBC accountor one-time transfer from another bank",
+              "minimumBalance": "US$ 1,000 (Minimum average daily balancefor the month)",
+              "feesAndCharges": "Fall below fee-US$10",
+              "monthlyStatements": "",
+              "productDescription": "A USD account with chequebook"
+            },
+            {
+              "productName": "Global Savings Account",
+              "remarks": "",
+              "benefits": "<div id=\"Benefit for Global Savings Account\"> <ul> <li>Flexibility to open a savings account in your preferred currency.</li> <li>Initial deposit can be done via S$ cheque, deduction from your OCBC account or one-time transfer from another bank.</li> <li>The interest rates for foreign currency deposits are updated daily for your information. http://www.ocbc.com/personal-banking/accounts/interest-rates.html</li> </ul> </div>",
+              "websiteLink": "https://www.ocbc.com/personal-banking/accounts/global-savings-account.html?pid=sg:en:others:accounts:GlobalSavingsAccount:Nov16:internal:depositsLP:::::",
+              "apply": "<div id=\"Apply for Global Savings Account\"> <ul> <li> Apply at any of our branches : <ul> <li>(for Singaporeans and Singapore PRs) NRIC</li> <li>(for Foreigners) Employment Pass (EP) or S-Pass or Student Pass</li> <li>(for Foreigners) Passport</li> <li>S$5,000 for initial deposit</li> <li>Additional documents : Include any one of the following documents:Phone bill,Half-yearly CPF statement,Any bank statement</li> </ul> </li> </ul> </div>",
+              "eligibility": "Singaporeans, Singapore PRs and foreigners age 18 and above.",
+              "initialDeposit": "5,000 units (for AUD, CAD, CNH, EUR, GBP, NZD, CHF,USD; 50,000 units for HKD and 500,000 units for JPY or equivalent in SGD)",
+              "minimumBalance": "",
+              "feesAndCharges": "",
+              "monthlyStatements": "",
+              "productDescription": "A savings account that allows you tosave in ten major currencies"
+            }
+          ],
+          "Description": ""
+        }
+      ],
+      "categoryName": "Foreign currency"
+    }
+  ],
+  "Disclaimer": "The data returned are indicative and are subjected to changes without prior notice. Please use the data at your own discretion and risk."
+}

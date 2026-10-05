@@ -1,0 +1,44 @@
+{
+  "homeLoanList": [
+    {
+      "subCategoryList": [
+        {
+          "description": "<div id=\"Description for Home loan (New Purchase)\"> <span>Different loans for different homes</span> <ul> <li>Financing of up to 80%</li> <li>Combination of pricing packages (variable rate and 3 months SIBOR) with no switching fees</li> <li>Attractive interest rates</li> <li>Dedicated customer care officers and mortgage specialists are just a phone call away</li> </ul> </div>",
+          "subCategoryName": "Home Loan (New Purchase)",
+          "productList": [
+            {
+              "productName": "Home Loan (New Purchase)",
+              "productDescription": "",
+              "eligibility": "<div id=\"Eligibility for Home Loan (New Purchase)\"> <ul> <li>For HDB purchase, you must meet HDB eligibility (http://www.hdb.gov.sg/cs/infoweb/residential/buying-a-flat/new/hdb-flat)</li> <li>For Private property purchase, everyone including Singapore PRs and foreigners are eligible</li> </ul> </div>",
+              "benefits": "",
+              "loanAmount": "<div id=\"Amount you can borrow for Home Loan (New Purchase)\"> <ul> <li>HDB: From S$100,000 to 80% of valuation</li> <li>Private Property: From S$200,000 to 80% of valuation</li> </ul> </div>",
+              "interestRates": "<div id=\"Interest rates for Home Loan (New Purchase)\"> <span>Fixed Deposit-linked rates</span> <ul> <li>36-month Fixed Deposit Mortgage Rate + 1.23% for the first 3 years</li> <li>Rates are pegged to our 36-month fixed deposit rate</li> <li>Rates and payments can change with our 36-month fixed deposit rate</li> <li>Free conversion to any other package if the fixed deposit rate increases</li> </ul> <span>Short-term fixed interest rates</span> <ul> <li>From 2.38% for the first year</li> <li>Fixed monthly payments means you can budget and plan ahead</li> <li>Protects you from rate fluctuations for the first 1-2 years</li> <li>Interest rates tend to be higher than other packages</li> </ul> <span>SIBOR-dependent rates</span> <ul> <li>3M SIBOR + 0.90% for the first 3 years OR 1M SIBOR + 0.65% for the first year</li> <li>Rates are pegged to the 1- or 3-month SIBOR</li> <li>Payments can increase or decrease based on SIBOR rates</li> <li>Rates are reviewed every 1 or 3 months, depending on the package chosen</li> </ul> <span>Variable interest rates</span> <ul> <li>From 1.75% for the first year</li> <li>Rates are lower than fixed rates</li> <li>Rates and payments can change with the OCBC board rate</li> </ul> </div>",
+              "feesAndCharges": "",
+              "webPageLink": "http://www.ocbc.com/personal-banking/loans/home-loan-hdb-and-private-property.html",
+              "remarks": ""
+            }
+          ]
+        },
+        {
+          "description": "<div id=\"Description for Home Loan (Refinancing)\"> <span>Get a home loan refinancing package customised for you</span> <ul> <li>Combination of pricing packages (variable rate and 3 months SIBOR) with no switching fees</li> <li>Attractive interest rates</li> <li>Dedicated customer care officers and mortgage specialists are just a phone call away</li> <li>Refinance your existing Home Loan with us to enjoy <ul> <li>Lower monthly instalments</li> <li>Customised solutions</li> </ul> </li> </ul> </div>",
+          "subCategoryName": "Home Loan (Refinancing)",
+          "productList": [
+            {
+              "productName": "Home Loan (Refinancing)",
+              "productDescription": "",
+              "eligibility": "",
+              "benefits": "",
+              "loanAmount": "<div id=\"Amount you can borrow for Home Loan (Refinancing)\"> <ul> <li>HDB From S$100,000</li> <li>Private property From S$200,000</li> <li>The above is capped at 100% of valuation or your outstanding loan, whichever is lower.</li> <li>*Home Loan on an owner occupied property purchased before 29 June 2013</li> </ul> </div>",
+              "interestRates": "<div id=\"Interest rates for Home Loan (Refinancing)\"> <span>Fixed Deposit-linked rates</span> <ul> <li>36-month Fixed Deposit Mortgage Rate + 1.23% for the first 3 years</li> <li>Rates are pegged to our 36-month fixed deposit rate</li> <li>Rates and payments can change with our 36-month fixed deposit rate</li> <li>Free conversion to any other package if the fixed deposit rate increases</li> </ul> <span>Short-term fixed interest rates</span> <ul> <li>From 2.38% for the first year</li> <li>Fixed monthly payments means you can budget and plan ahead</li> <li>Protects you from rate fluctuations for the first 1-2 years</li> <li>Interest rates tend to be higher than other packages</li> </ul> <span>SIBOR-dependent rates</span> <ul> <li>3M SIBOR + 0.90% for the first 3 years OR 1M SIBOR + 0.65% for the first year</li> <li>Rates are pegged to the 1- or 3-month SIBOR</li> <li>Payments can increase or decrease based on SIBOR rates</li> <li>Rates are reviewed every 1 or 3 months, depending on the package chosen</li> </ul> <span>Variable interest rates</span> <ul> <li>From 1.75% for the first year</li> <li>Rates are lower than fixed rates</li> <li>Rates and payments can change with the OCBC board rate</li> </ul> </div>",
+              "feesAndCharges": "",
+              "webPageLink": "http://www.ocbc.com/personal-banking/loans/home-loan-hdb-and-private-property-refinancing.html",
+              "remarks": ""
+            }
+          ]
+        }
+      ],
+      "categoryName": "Home Loans"
+    }
+  ],
+  "disclaimer": "The data returned are indicative and are subjected to changes without prior notice. Please use the data at your own discretion and risk."
+}
