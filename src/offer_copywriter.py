@@ -29,7 +29,7 @@ import core
 
 FACTS_PATH = "data/product_facts.md"
 OUT_PATH = "data/generated/offer_copy.json"
-MODEL = "claude-opus-5-5"
+DEFAULT_MODEL = "claude-opus-5-5"  # override with the OCBC_CAMPAIGN_MODEL env var / .env
 BUDGET = 0.20
 N_SEGMENTS = 3
 
@@ -193,6 +193,12 @@ def _client():
     return anthropic.Anthropic()
 
 
+def model_id():
+    """Model to use: OCBC_CAMPAIGN_MODEL if set (in the env or .env), else DEFAULT_MODEL."""
+    load_dotenv(find_dotenv(usecwd=True))
+    return os.getenv("OCBC_CAMPAIGN_MODEL", DEFAULT_MODEL)
+
+
 def _segment_prompt(seg, facts, feedback=None):
     """User message: the segment, its drivers, and the facts. Nothing else."""
     drivers = "\n".join(f"- {d['driver']} ({d['share']:.0%} of this segment)"
@@ -214,7 +220,7 @@ def generate_copy(client, seg, facts, feedback=None):
     re-runs the request on Anthropic's recommended fallback model.
     """
     response = client.beta.messages.create(
-        model=MODEL,
+        model=model_id(),
         max_tokens=16000,
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",

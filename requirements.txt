@@ -1,0 +1,13 @@
+# Python 3.11
+streamlit==1.65.0       # app.py UI
+pandas==3.0.6           # customer tables, scoring, evaluation
+numpy==2.4.6            # synthetic data, random draws
+scikit-learn==1.9.1     # logistic regression, scaling, holdout split, AUC
+plotly==7.1.0           # evaluation bar chart
+faker==40.40.0          # synthetic display names (never a model input)
+anthropic==1.11.0       # Claude writes the offer copy
+python-dotenv==1.2.4    # reads ANTHROPIC_API_KEY (and OCBC_CAMPAIGN_MODEL) from .env
+
+# System tool, not pip: scripts/build_product_facts.py reads the T&C PDF with
+# `pdftotext` from poppler (macOS: brew install poppler). Only needed to rebuild
+# data/product_facts.md; everything else runs without it.

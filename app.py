@@ -134,7 +134,11 @@ left, right = st.columns([3, 1])
 with right:
     if st.button("Regenerate copy", help="Calls Claude for each segment (about a minute)."):
         with st.spinner("Writing and checking copy…"):
-            cached = copywriter.build_all()
+            try:
+                cached = copywriter.build_all()
+            except Exception as e:  # never show a stack trace; keep the cached copy on screen
+                st.error(f"Couldn't regenerate copy ({type(e).__name__}). Check ANTHROPIC_API_KEY "
+                         "in .env and try again. Showing the last cached copy instead.")
 if cached is None:
     left.info("No copy generated yet. Click **Regenerate copy** or run "
               "`python src/offer_copywriter.py`.")
