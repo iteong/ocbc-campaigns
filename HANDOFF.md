@@ -68,8 +68,6 @@ install poppler) and stops if any fact no longer matches its source word for wor
   budget or strategy.
 - **Testing.** There are 3 guardrail tests in `tests/`, not a full suite. The app was checked with Streamlit's
   `AppTest` (normal, no saved copy, bad key), but those checks aren't automated.
-- **Screenshots** in `docs/screenshots/` predate the opt-in filter, so their numbers (e.g. 15,231 targeted) are from
-  before it.
 
 ## To productionise
 1. **Data:** a real randomised past campaign (or a fresh test cell), a feature store with point-in-time features, and

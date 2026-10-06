@@ -20,7 +20,7 @@ product facts, and plain-code compliance checks run on every draft. Every score 
 
 **Propensity ranking at a 40% budget.** High propensity, but often little or negative uplift:
 
-![Propensity ranking at 40%: tiles, comparison chart and targeted customers](docs/screenshots/propensity.png)
+![Propensity ranking at 40%: tiles, comparison chart and targeted customers](docs/screenshots/propensity_higherbudget.png)
 
 **Offer copy for one segment**, with each compliance check and the cited facts:
 
