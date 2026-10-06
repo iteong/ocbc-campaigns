@@ -3,7 +3,7 @@
 ALL DATA HERE IS SYNTHETIC. No real customer data is used or implied.
 
 Run from the project folder:  python src/data_gen.py
-Writes: data/synthetic/customers.csv
+Writes: data/synthetic/customers.csv (100,000 rows)
 
 The response pattern is planted on purpose so the evaluation has a known answer:
 - Baseline conversion averages about 3%. It is higher for "sure things"
@@ -107,7 +107,7 @@ def is_eligible(df):
             | (~local & (age >= 21) & (inc >= 45_000)))
 
 
-def generate_customers(n=20_000, seed=42):
+def generate_customers(n=100_000, seed=42):
     """Return a DataFrame of n synthetic customers with ids, names and features.
 
     `name` comes from Faker and is for display only. It is never a model feature
