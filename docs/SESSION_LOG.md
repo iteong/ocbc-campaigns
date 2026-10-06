@@ -80,19 +80,29 @@ Decisions taken during planning:
 - Verified headlessly with Streamlit `AppTest`. At 20% uplift it targets 15,231 customers: 606 expected vs
   571 ± 209 measured incremental conversions.
 
-## Publishing
+## Publishing (6 Oct)
 - Merged to `main` (fast-forward) and deleted the `campaign-prototype` branch.
 - The GitHub repo is public; the user chose to push OCBC's raw files as they are.
 - The first pushes failed with 403: the saved fine-grained token lacked Contents: write on the new repo. Fixed by
   replacing the Keychain credential.
-- Then adopted from `ocbc-product-qa`:
-  - README, HANDOFF and this log;
-  - pinned `requirements.txt`;
-  - a committed `data/eval/SUMMARY.md`;
-  - the `OCBC_CAMPAIGN_MODEL` setting;
-  - a Regenerate button that fails safely, tested with an invalid key: message shown, cached copy kept.
 
-## Reliability and guardrail tests
+## 7 Oct 2026: docs, a display fix, reliability and tests
+
+### Docs adopted from `ocbc-product-qa` (`c9e3f34`)
+- README, HANDOFF and this log.
+- Pinned `requirements.txt`, with the poppler/`pdftotext` system dependency noted.
+- `src/eval.py` writes a committed `data/eval/SUMMARY.md` (10/20/30% budgets).
+- The `OCBC_CAMPAIGN_MODEL` setting (default `claude-opus-5-5`).
+- A Regenerate button that fails safely. Tested with an invalid key: message shown, cached copy kept.
+
+### Screenshots and a display bug (`b114082`)
+- The user's first screenshots showed that Streamlit markdown treats text between two `$` signs as LaTeX. Copy and
+  facts such as "S$800 … S$160" rendered as squashed italic maths.
+- Fixed with `md_safe()` in `app.py`, which escapes `$` in the subject, body, check reasons and cited facts.
+  Confirmed with `AppTest` and a fresh screenshot.
+- The README links 4 screenshots: the 20% uplift view as the main image, the rest in a collapsible section.
+
+### Reliability and guardrail tests (`f84ca67`, "Uplift targeting prototype")
 - **Consent:** added a `marketing_opt_in` flag (85%, its own seed, so every other column is unchanged). Only
   eligible, opted-in customers enter the past test, and `core.select_targets()` filters every ranking. Without the
   filter, about 2,900 opted-out customers would have appeared in each top-20% list.
@@ -103,7 +113,24 @@ Decisions taken during planning:
   - Tested with an invalid key and a 0.01 s timeout: both fell back in under a second.
   - The headless check found that a failed Regenerate overwrote the saved copy. Fixed: only fully successful runs are
     cached.
-- **Tests:** `pytest tests/ -v` runs 3 guardrail tests (4 cases). All pass in about 70 s.
+- **App states checked with `AppTest`:**
+  - normal: Claude copy, no notice;
+  - no saved copy: templates, with a "No Claude-written copy yet" notice;
+  - Regenerate with a bad key: templates, a friendly warning, and the saved copy kept.
+- **Copy regenerated** for the new segment sizes (6,274 / 4,604 / 1,716). All 3 drafts passed on the first attempt.
+- **Tests:** `pytest tests/ -v` runs 3 guardrail tests (4 cases). All pass in about 70 s:
+  1. no customer without `marketing_opt_in` appears in any target list;
+  2. uplift beats random at a 20% budget;
+  3. `check_copy()` rejects "guaranteed".
+
+  Without the filter, test 1 would see about 2,900 opted-out customers per top-20% list, so it can genuinely fail.
+- **Docs updated** to the new numbers. The fallback templates are flagged as written for the prototype and not yet
+  Compliance-approved.
+
+### Screenshots refreshed (`dcb7b6c`)
+- The user retook all 4 screenshots after the opt-in filter: 12,933 targeted, 507 expected vs 637 ± 199 measured.
+  `propensity.png` became `propensity_higherbudget.png` (40% budget); the README link and HANDOFF were updated to match.
+- All commits are pushed to https://github.com/iteong/ocbc-campaigns.
 
 ## Open caveats
 See `HANDOFF.md` → Known shortcuts. The main ones:
