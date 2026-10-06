@@ -58,6 +58,11 @@ def pick_targets(scored, strategy, budget, seed=0):
     return scored.nlargest(k, col)
 
 
+def md_safe(text):
+    """Escape '$' so Streamlit markdown doesn't render 'S$800 ... S$160' as a LaTeX formula."""
+    return str(text).replace("$", "\\$")
+
+
 def facts_pulled_on():
     """'Pulled on' date from the product facts header, for the caveat line."""
     m = re.search(r"\*\*Pulled on:\*\*\s*(\S+)", Path(copywriter.FACTS_PATH).read_text())
@@ -153,18 +158,18 @@ else:
         status = "✅ all checks pass" if seg["passed"] else "❌ check failed"
         label = f"{seg['segment']} · {seg['size']:,} customers · {status}"
         with st.expander(label, expanded=False):
-            st.markdown(f"**Subject:** {seg['subject']}")
-            st.markdown(f"**Body:** {seg['body']}")
+            st.markdown(f"**Subject:** {md_safe(seg['subject'])}")
+            st.markdown(f"**Body:** {md_safe(seg['body'])}")
             st.caption("Top drivers: " + "; ".join(
                 f"{d['driver']} ({d['share']:.0%})" for d in seg["top_drivers"])
                 + f" · in current selection: {in_view.get(seg['segment'], 0):,}"
                 + f" · model {seg['model']}, attempts {seg['attempts']}")
             st.markdown("**Compliance checks**")
             for chk in seg["checks"]:
-                st.markdown(f"{'✅' if chk['passed'] else '❌'} **{chk['rule']}**: {chk['reason']}")
+                st.markdown(f"{'✅' if chk['passed'] else '❌'} **{chk['rule']}**: {md_safe(chk['reason'])}")
             st.markdown("**Facts cited**")
             for fid in seg["fact_ids"]:
                 f = facts.get(fid)
-                st.markdown(f"- `{fid}` {f['fact']}" if f else f"- `{fid}` (not in facts file)")
+                st.markdown(f"- `{fid}` {md_safe(f['fact'])}" if f else f"- `{fid}` (not in facts file)")
             st.caption(f"Product facts pulled {facts_pulled_on()}; indicative and possibly "
                        "outdated. Recheck the OCBC source before any real use.")

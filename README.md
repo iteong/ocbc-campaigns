@@ -9,8 +9,24 @@ product facts, and plain-code compliance checks run on every draft. Every score 
 > facts for the OCBC 365 Credit Card come from OCBC's public product page and T&Cs (terms effective 1 Nov 2026),
 > pulled 6 Oct 2026. They are indicative and may be outdated: recheck the source before relying on any figure.
 
-<!-- Screenshots: add images to docs/screenshots/ and link them here, e.g.
-![Targeting tiles and the strategy comparison chart](docs/screenshots/targeting.png) -->
+![Uplift targeting at a 20% budget: metric tiles and the propensity vs uplift vs random comparison](docs/screenshots/uplift1.png)
+
+<details>
+<summary>More screenshots: targeted customers, propensity ranking, offer copy and checks</summary>
+
+**Targeted customers with their reasons**, and the offer-copy sections:
+
+![Targeted customers ranked by uplift, with plain-English reasons, and one copy section per segment](docs/screenshots/uplift2.png)
+
+**Propensity ranking at a 40% budget.** High propensity, but often little or negative uplift:
+
+![Propensity ranking at 40%: tiles, comparison chart and targeted customers](docs/screenshots/propensity.png)
+
+**Offer copy for one segment**, with each compliance check and the cited facts:
+
+![Offer copy for "High spender who dines out" with pass/fail checks and cited facts](docs/screenshots/offer_copy.png)
+
+</details>
 
 ## How it works
 1. **Product facts:** `scripts/build_product_facts.py` downloads the 365 product page and T&C PDF into
