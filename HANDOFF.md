@@ -13,6 +13,7 @@ from the repo root, in this order:
 4. `python src/offer_copywriter.py`: copy for the 3 largest targeted segments (3–6 Claude calls) →
    `data/generated/offer_copy.json`.
 5. `streamlit run app.py`.
+6. `pytest tests/ -v`: 3 guardrail tests (about 70 s, no API calls).
 
 To rebuild the product facts, run `python scripts/build_product_facts.py [--refresh]`. It needs `pdftotext` (brew
 install poppler) and stops if any fact no longer matches its source word for word.
@@ -24,8 +25,9 @@ install poppler) and stops if any fact no longer matches its source word for wor
 | `src/data_gen.py` | Customers (Faker names for display only), `is_eligible()` from facts F12–F14, `simulate_campaign()` with planted persuadables. |
 | `src/core.py` | `fit_models()` (propensity Pipeline, and T and C models sharing one scaler), `score_customers()`, `top_drivers()`, `assign_segment()`. |
 | `src/eval.py` | `split_holdout()`, `evaluate()`, `compare_strategies()`, `strategy_chart()`, `write_summary()`. |
-| `src/offer_copywriter.py` | `target_segments()`, `generate_copy()` (Claude, JSON schema, fallbacks), `check_copy()`, cache helpers. |
-| `app.py` | Streamlit UI. Targeting uses models fit on the whole past test; the chart and measured tile use the holdout. Regenerate errors show a message, never a stack trace. |
+| `src/offer_copywriter.py` | `target_segments()`, `generate_copy()` (Claude, JSON schema, server-side fallbacks), `check_copy()`, `template_copy()` fallbacks (45 s timeout, try/except), cache helpers. |
+| `app.py` | Streamlit UI. Targeting uses models fit on the whole past test; the chart and measured tile use the holdout. If Claude fails, segments show fallback templates with a notice, never a stack trace. |
+| `tests/` | Guardrail tests: no customer without `marketing_opt_in` in any target list; uplift beats random at 20%; `check_copy()` rejects "guaranteed". |
 
 ## Data sources and what should replace them
 - **Customers and the past campaign are synthetic.** In production, replace them with a real **randomised** past
@@ -41,6 +43,10 @@ install poppler) and stops if any fact no longer matches its source word for wor
 ## Key assumptions
 - Response rates, persuadable thresholds (S$1,200/month spend, 10 app logins/month), the income mix and car ownership
   are all invented. Each is labelled `ASSUMPTION` in the code.
+- `marketing_opt_in` is a random 85% (PDPA consent). Only opted-in, eligible customers were in the past test, and
+  `core.select_targets()` filters on it for every ranking. The Do Not Call registry is not modelled.
+- The fallback templates were written for this prototype and pass `check_copy()`. They are **not** Compliance-approved;
+  in production they would be the approved templates.
 - Eligibility is simplified to the age, income and residency rules on the product page. There are no credit-bureau,
   income-document or MAS credit card checks.
 - `check_copy()` is a prototype stand-in, **not** a review against MAS or ABS advertising guidelines. Real copy needs
@@ -60,14 +66,17 @@ install poppler) and stops if any fact no longer matches its source word for wor
   - The category rule only scans sentences with a rate or "cashback".
 - **Copy is fixed at one selection.** It is generated for the top 20% by uplift and doesn't change with the app's
   budget or strategy.
-- **Testing.** There are no unit tests; checks were run by hand and with Streamlit's `AppTest`.
+- **Testing.** There are 3 guardrail tests in `tests/`, not a full suite. The app was checked with Streamlit's
+  `AppTest` (normal, no saved copy, bad key), but those checks aren't automated.
+- **Screenshots** in `docs/screenshots/` predate the opt-in filter, so their numbers (e.g. 15,231 targeted) are from
+  before it.
 
 ## To productionise
 1. **Data:** a real randomised past campaign (or a fresh test cell), a feature store with point-in-time features, and
    checks that block bad loads.
 2. **Modelling:** compare the two-model approach with single-model uplift (treatment interactions), X-learner or uplift
    trees on Qini/AUUC. Use a held-out time period, and calibrate predicted uplift before quoting conversion forecasts.
-3. **Targeting rules:** exclude customers without marketing consent or registered on the Do Not Call registry (PDPA).
+3. **Targeting rules:** use real consent records, and check the Do Not Call registry before any SMS or call (PDPA).
    Add contact-frequency caps, and set a policy on existing cardholders.
 4. **Copy governance:** Compliance-approved templates or claims library, pairing-aware fact checks, human approval
    before send, and an audit log of prompt, facts version and output.

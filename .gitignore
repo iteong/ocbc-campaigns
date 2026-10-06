@@ -6,3 +6,4 @@ __pycache__/
 .DS_Store
 data/synthetic/
 data/generated/
+.pytest_cache/

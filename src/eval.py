@@ -29,7 +29,7 @@ COLORS = {"measured": "#2a78d6", "planted": "#eb6834"}  # dataviz categorical sl
 
 
 def split_holdout(df, test_size=HOLDOUT, seed=42):
-    """Split test customers 70/30, stratified on treated x converted.
+    """Split test customers (eligible + opted in) 70/30, stratified on treated x converted.
 
     Stratifying on both keeps each arm and its ~3% conversion rate in the same
     proportions in train and holdout, which matters with so few conversions.

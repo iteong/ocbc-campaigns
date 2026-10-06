@@ -92,6 +92,19 @@ Decisions taken during planning:
   - the `OCBC_CAMPAIGN_MODEL` setting;
   - a Regenerate button that fails safely, tested with an invalid key: message shown, cached copy kept.
 
+## Reliability and guardrail tests
+- **Consent:** added a `marketing_opt_in` flag (85%, its own seed, so every other column is unchanged). Only
+  eligible, opted-in customers enter the past test, and `core.select_targets()` filters every ranking. Without the
+  filter, about 2,900 opted-out customers would have appeared in each top-20% list.
+- **Resulting shift:** 64,667 customers in the test. At 20%: uplift 191 ± 60, propensity 51 ± 75, random 45 ± 41;
+  AUC 0.779.
+- **Claude calls:** a 45 s timeout, 1 retry and a try/except, with a fallback template per segment that passes
+  `check_copy()`. After one failure the remaining segments skip the API.
+  - Tested with an invalid key and a 0.01 s timeout: both fell back in under a second.
+  - The headless check found that a failed Regenerate overwrote the saved copy. Fixed: only fully successful runs are
+    cached.
+- **Tests:** `pytest tests/ -v` runs 3 guardrail tests (4 cases). All pass in about 70 s.
+
 ## Open caveats
 See `HANDOFF.md` → Known shortcuts. The main ones:
 - the evaluation is optimistic by construction;

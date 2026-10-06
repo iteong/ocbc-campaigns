@@ -11,7 +11,6 @@ import re
 import sys
 from pathlib import Path
 
-import numpy as np
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -19,7 +18,7 @@ import core  # noqa: E402
 import eval as evaluation  # noqa: E402
 import offer_copywriter as copywriter  # noqa: E402
 
-STRATEGIES = {"Uplift": "uplift", "Propensity": "propensity", "Random": None}
+STRATEGIES = {"Uplift": "uplift", "Propensity": "propensity", "Random": "random"}
 
 st.set_page_config(page_title="365 Card Campaign Targeting", page_icon="💳", layout="wide")
 
@@ -28,10 +27,10 @@ st.set_page_config(page_title="365 Card Campaign Targeting", page_icon="💳", l
 
 @st.cache_resource(show_spinner="Fitting models on the past campaign…")
 def deployment_scores():
-    """Models fit on the whole past test, scoring every eligible customer (for targeting)."""
+    """Models fit on the whole past test, scoring every targetable customer (eligible + opted in)."""
     df = core.load_customers()
     models = core.fit_models(df)
-    return core.score_customers(models, df[df["eligible"] == 1])
+    return core.score_customers(models, core.targetable(df))
 
 
 @st.cache_resource(show_spinner="Evaluating on the 30% holdout…")
@@ -46,16 +45,6 @@ def strategy_table(budget):
     """Propensity vs uplift vs random on the holdout at this budget."""
     scored, _ = holdout_scores()
     return evaluation.compare_strategies(scored, budget)
-
-
-def pick_targets(scored, strategy, budget, seed=0):
-    """Top `budget` share by the chosen score (or a seeded random sample)."""
-    k = int(len(scored) * budget)
-    col = STRATEGIES[strategy]
-    if col is None:
-        idx = np.random.default_rng(seed).choice(len(scored), k, replace=False)
-        return scored.iloc[idx]
-    return scored.nlargest(k, col)
 
 
 def md_safe(text):
@@ -87,7 +76,7 @@ with st.sidebar:
 st.title("OCBC 365 Credit Card: who to target, and what to say")
 
 scored = deployment_scores()
-targets = pick_targets(scored, strategy, budget)
+targets = core.select_targets(scored, STRATEGIES[strategy], budget)
 table = strategy_table(budget)
 row = table.loc[strategy]
 per_contact = row["incremental"] / row["n"]
@@ -95,7 +84,8 @@ margin_per_contact = row["margin_95"] / row["n"]
 
 c1, c2, c3 = st.columns(3)
 c1.metric("Customers targeted", f"{len(targets):,}",
-          help=f"Top {budget:.0%} of {len(scored):,} eligible customers, ranked by {strategy.lower()}.")
+          help=f"Top {budget:.0%} of {len(scored):,} eligible, opted-in customers, "
+               f"ranked by {strategy.lower()}.")
 c2.metric("Expected incremental conversions", f"{targets['uplift'].sum():,.0f}",
           help="Sum of predicted uplift (P_offered − P_not offered) over targeted customers. "
                "A model estimate; compare it with the holdout-measured figure next to it.")
@@ -139,37 +129,49 @@ left, right = st.columns([3, 1])
 with right:
     if st.button("Regenerate copy", help="Calls Claude for each segment (about a minute)."):
         with st.spinner("Writing and checking copy…"):
-            try:
-                cached = copywriter.build_all()
+            try:  # build_all already falls back per segment; this catches anything else
+                cached = copywriter.build_all(scored=scored)
             except Exception as e:  # never show a stack trace; keep the cached copy on screen
-                st.error(f"Couldn't regenerate copy ({type(e).__name__}). Check ANTHROPIC_API_KEY "
-                         "in .env and try again. Showing the last cached copy instead.")
-if cached is None:
-    left.info("No copy generated yet. Click **Regenerate copy** or run "
-              "`python src/offer_copywriter.py`.")
-else:
-    left.caption(f"Generated {cached['generated_at']} for the top {cached['budget']:.0%} "
-                 "by uplift. Claude saw only the segment name, its drivers and "
-                 "data/product_facts.md. Checks are plain code; they are a prototype "
-                 "stand-in, not a compliance review.")
-    facts = {f["id"]: f for f in copywriter.load_facts()}
-    in_view = targets["segment"].value_counts()
-    for seg in cached["segments"]:
-        status = "✅ all checks pass" if seg["passed"] else "❌ check failed"
-        label = f"{seg['segment']} · {seg['size']:,} customers · {status}"
-        with st.expander(label, expanded=False):
-            st.markdown(f"**Subject:** {md_safe(seg['subject'])}")
-            st.markdown(f"**Body:** {md_safe(seg['body'])}")
-            st.caption("Top drivers: " + "; ".join(
-                f"{d['driver']} ({d['share']:.0%})" for d in seg["top_drivers"])
-                + f" · in current selection: {in_view.get(seg['segment'], 0):,}"
-                + f" · model {seg['model']}, attempts {seg['attempts']}")
-            st.markdown("**Compliance checks**")
-            for chk in seg["checks"]:
-                st.markdown(f"{'✅' if chk['passed'] else '❌'} **{chk['rule']}**: {md_safe(chk['reason'])}")
-            st.markdown("**Facts cited**")
-            for fid in seg["fact_ids"]:
-                f = facts.get(fid)
-                st.markdown(f"- `{fid}` {md_safe(f['fact'])}" if f else f"- `{fid}` (not in facts file)")
-            st.caption(f"Product facts pulled {facts_pulled_on()}; indicative and possibly "
-                       "outdated. Recheck the OCBC source before any real use.")
+                left.error(f"Couldn't regenerate copy ({type(e).__name__}). "
+                           "Showing the last saved copy instead.")
+first_run = cached is None
+if first_run:
+    cached = copywriter.template_payload(scored)
+
+fallbacks = [s_ for s_ in cached["segments"] if s_.get("source") == "template"]
+if first_run:
+    left.info("No Claude-written copy yet, so each segment shows its fallback template. "
+              "Click **Regenerate copy** to have Claude write it.")
+elif fallbacks:
+    reason = fallbacks[0].get("fallback_reason") or "unavailable"
+    left.warning(f"Claude couldn't write copy just now ({reason}), so "
+                 f"{len(fallbacks)} of {len(cached['segments'])} segments show their fallback "
+                 "template instead. Your last saved copy is kept. Click **Regenerate copy** to "
+                 "try again; the API key lives in `.env`.", icon="ℹ️")
+left.caption(f"Generated {cached['generated_at']} for the top {cached['budget']:.0%} "
+             "by uplift. Claude saw only the segment name, its drivers and "
+             "data/product_facts.md. Checks are plain code; they are a prototype "
+             "stand-in, not a compliance review.")
+facts = {f["id"]: f for f in copywriter.load_facts()}
+in_view = targets["segment"].value_counts()
+for seg in cached["segments"]:
+    status = "✅ all checks pass" if seg["passed"] else "❌ check failed"
+    origin = " · fallback template" if seg.get("source") == "template" else ""
+    label = f"{seg['segment']} · {seg['size']:,} customers · {status}{origin}"
+    with st.expander(label, expanded=False):
+        st.markdown(f"**Subject:** {md_safe(seg['subject'])}")
+        st.markdown(f"**Body:** {md_safe(seg['body'])}")
+        made_by = (f"model {seg['model']}, attempts {seg['attempts']}" if seg.get("source") != "template"
+                   else "fallback template (pre-checked by check_copy; pending Compliance approval)")
+        st.caption("Top drivers: " + "; ".join(
+            f"{d['driver']} ({d['share']:.0%})" for d in seg["top_drivers"])
+            + f" · in current selection: {in_view.get(seg['segment'], 0):,} · {made_by}")
+        st.markdown("**Compliance checks**")
+        for chk in seg["checks"]:
+            st.markdown(f"{'✅' if chk['passed'] else '❌'} **{chk['rule']}**: {md_safe(chk['reason'])}")
+        st.markdown("**Facts cited**")
+        for fid in seg["fact_ids"]:
+            f = facts.get(fid)
+            st.markdown(f"- `{fid}` {md_safe(f['fact'])}" if f else f"- `{fid}` (not in facts file)")
+        st.caption(f"Product facts pulled {facts_pulled_on()}; indicative and possibly "
+                   "outdated. Recheck the OCBC source before any real use.")

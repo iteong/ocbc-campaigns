@@ -72,6 +72,24 @@ def load_customers(path=DATA_PATH):
     return pd.read_csv(path)
 
 
+def targetable(df):
+    """Customers we may contact: card-eligible AND opted in to marketing (PDPA consent)."""
+    return df[(df["eligible"] == 1) & (df["marketing_opt_in"] == 1)]
+
+
+def select_targets(scored, strategy="uplift", budget=0.20, seed=0):
+    """Top `budget` share of targetable customers by 'uplift' or 'propensity', or a seeded random pick.
+
+    Filters to targetable() first, so no ranking can ever include a customer
+    who isn't eligible or hasn't opted in.
+    """
+    pool = targetable(scored)
+    k = int(len(pool) * budget)
+    if strategy == "random":
+        return pool.sample(n=k, random_state=seed)
+    return pool.nlargest(k, strategy)
+
+
 def build_features(df):
     """Return df with the derived model inputs added (logs, spend shares, flags)."""
     out = df.copy()
@@ -220,7 +238,7 @@ def main():
     print("Coefficients (log-odds per 1 std dev; positive = raises the score):")
     print(coefficients(models).sort_values("uplift_T_minus_C", ascending=False).to_string(), "\n")
 
-    scored = score_customers(models, df[df["eligible"] == 1])
+    scored = score_customers(models, targetable(df))
     print("Predicted uplift by planted group (sanity check; the model never saw this):")
     print(scored.groupby("persuadable")["uplift"].describe()[["mean", "25%", "50%", "75%"]]
           .map("{:+.3f}".format).to_string(), "\n")

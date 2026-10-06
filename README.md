@@ -32,15 +32,16 @@ product facts, and plain-code compliance checks run on every draft. Every score 
 1. **Product facts:** `scripts/build_product_facts.py` downloads the 365 product page and T&C PDF into
    `data/ocbc_cards/` and writes [`data/product_facts.md`](data/product_facts.md): 15 facts, each checked word for
    word against its source.
-2. **Synthetic customers:** `src/data_gen.py` makes 100,000 customers and a past 50/50 randomised offer. The answer is
-   planted: baseline conversion averages about 3%, and the offer adds +6 points only for high spenders with high app
-   engagement.
+2. **Synthetic customers:** `src/data_gen.py` makes 100,000 customers, each with a `marketing_opt_in` flag, and a
+   past 50/50 randomised offer among eligible, opted-in customers. The answer is planted: baseline conversion averages
+   about 3%, and the offer adds +6 points only for high spenders with high app engagement.
 3. **Models:** `src/core.py` fits logistic regressions: a propensity model, and a two-model uplift estimate
    (uplift = P(convert | offered) − P(convert | not offered)). Each customer gets their top uplift drivers in plain
    English, e.g. "High app engagement (15 logins/month)", plus a spend-mix segment.
 4. **Evaluation:** `src/eval.py` compares propensity, uplift and random targeting on a 30% holdout.
 5. **Offer copy:** `src/offer_copywriter.py` asks Claude for a subject and 2-sentence body for the 3 largest targeted
-   segments, using only the segment's drivers and the facts table. `check_copy()` then applies five rules in plain code:
+   segments, using only the segment's drivers and the facts table. Every call has a timeout and a try/except. If Claude
+   fails or is slow, that segment falls back to its template and the app shows a friendly notice. `check_copy()` then applies five rules in plain code:
    - numbers must appear in the facts;
    - "T&Cs apply" must be present;
    - no banned phrases;
@@ -48,15 +49,15 @@ product facts, and plain-code compliance checks run on every draft. Every score 
    - subject and body length.
 
 ## Results
-Top 20% of a 22,847-customer holdout (823 conversions), from [`data/eval/SUMMARY.md`](data/eval/SUMMARY.md):
+Top 20% of a 19,401-customer holdout (703 conversions), from [`data/eval/SUMMARY.md`](data/eval/SUMMARY.md):
 
 | Strategy | Offered vs not-offered conversion | Measured incremental conversions | Planted truth |
 |---|---|---|---|
-| **Uplift** | 7.9% vs 4.1% | **171 ± 63** | 144 |
-| Propensity | 10.9% vs 9.8% | 50 ± 81 | 56 |
-| Random | 4.1% vs 3.0% | 51 ± 42 | 45 |
+| **Uplift** | 8.8% vs 3.9% | **191 ± 60** | 120 |
+| Propensity | 11.3% vs 9.9% | 51 ± 75 | 47 |
+| Random | 4.2% vs 3.1% | 45 ± 41 | 38 |
 
-Propensity scores well (AUC 0.772), but it targets customers who convert anyway, mostly existing cardholders. So it
+Propensity scores well (AUC 0.779), but it targets customers who convert anyway, mostly existing cardholders. So it
 does no better than random. All three generated copy drafts passed every check on the first attempt.
 
 **These numbers are optimistic.** We planted the response pattern ourselves, then chose the `spend_x_app` feature and
@@ -75,10 +76,11 @@ python src/core.py               # fit models, print coefficients and sample dri
 python src/eval.py               # holdout comparison -> data/eval/SUMMARY.md, data/generated/eval.html
 python src/offer_copywriter.py   # copy + checks for 3 segments: 3-6 Claude calls, ~1 min
 streamlit run app.py
+pytest tests/ -v                 # 3 guardrail tests (~70 s, no API calls)
 ```
 
-Without a key, everything except copy generation runs. The app shows the last cached copy, and **Regenerate copy**
-shows an error instead of a stack trace. The model defaults to `claude-opus-5-5`; set `OCBC_CAMPAIGN_MODEL` to change it.
+Without a key, everything except copy generation runs. The app shows the last saved copy, or each segment's
+fallback template, with a notice instead of a stack trace. The model defaults to `claude-opus-5-5`; set `OCBC_CAMPAIGN_MODEL` to change it.
 
 ## Files
 | File | What it does |
@@ -90,6 +92,7 @@ shows an error instead of a stack trace. The model defaults to `claude-opus-5-5`
 | `src/offer_copywriter.py` | Claude copy generation and the plain-code `check_copy()`. |
 | `scripts/build_product_facts.py` | Downloads OCBC 365 sources and writes the verified facts table. |
 | `scripts/clean_products.py` | Cleans OCBC's public product API JSON (deposit, loan and investment products). |
+| `tests/test_guardrails.py` | No opted-out customer in any target list; uplift beats random at 20%; `check_copy()` rejects "guaranteed". |
 
 See [`HANDOFF.md`](HANDOFF.md) for assumptions, known shortcuts and what productionising would take, and
 [`docs/SESSION_LOG.md`](docs/SESSION_LOG.md) for how it was built.

@@ -4,13 +4,17 @@ Run from the project folder:  python src/offer_copywriter.py
 Reads:  data/synthetic/customers.csv, data/product_facts.md
 Writes: data/generated/offer_copy.json (cached so the app doesn't call the API on reload)
 
-For the 3 largest segments in the top 20% by uplift, Claude gets ONLY:
+For the 3 largest segments in the top 20% by uplift (eligible, opted-in customers), Claude gets ONLY:
   - the segment name and its most common uplift drivers (no names, ids or rows)
   - the verbatim facts table from data/product_facts.md
 and returns an email subject line plus a 2-sentence body.
 
 check_copy() then applies deterministic rules. If a draft fails, Claude gets
 one retry with the failure reasons. The check decides; Claude never grades itself.
+
+Reliability: every Claude call has a timeout and is wrapped in try/except. If
+a call fails or is too slow, that segment gets its fallback template (below)
+instead, and the remaining segments skip the API, so a demo never hangs or crashes.
 
 ASSUMPTION (compliance): these rules are a prototype stand-in. They are NOT a
 review against MAS or ABS advertising guidelines (or any other regulation),
@@ -32,6 +36,8 @@ OUT_PATH = "data/generated/offer_copy.json"
 DEFAULT_MODEL = "claude-opus-5-5"  # override with the OCBC_CAMPAIGN_MODEL env var / .env
 BUDGET = 0.20
 N_SEGMENTS = 3
+API_TIMEOUT = 45.0   # seconds per request; one call usually takes ~20 s at medium effort
+API_RETRIES = 1      # SDK retries on timeouts, 429 and 5xx before we fall back
 
 BANNED_PHRASES = ["guaranteed", "guarantee", "risk-free", "risk free", "free money",
                   "unlimited", "no minimum spend", "no cap"]
@@ -58,6 +64,26 @@ Hard rules (a program checks every one of them):
 - Subject line: at most 60 characters.
 - Body: exactly 2 sentences, then the words "T&Cs apply." at the end.
 - List the fact IDs (e.g. F1, F2) you relied on."""
+
+# Fallback copy per segment, used when Claude is unavailable. Written for this
+# prototype from data/product_facts.md (F1, F2, F3, F5, F10) and checked with
+# check_copy() (see tests/). ASSUMPTION: NOT yet approved by Compliance; in
+# production these would be the Compliance-approved templates.
+_TEMPLATE_BODY = ("Earn 6% cashback on Dining, Groceries, Land Transport and Petrol with the "
+                  "OCBC 365 Credit Card when you meet the S$800 Minimum Spend Requirement, "
+                  "with cashback capped at S$160 per calendar month. {second} T&Cs apply.")
+_FEE = "The annual fee is waived for the first two years."
+TEMPLATES = {
+    "High spender who dines out": ("Earn 6% cashback when you dine out", _FEE),
+    "Grocery-heavy household": ("6% cashback on your grocery runs", _FEE),
+    "Daily commuter": ("6% cashback on your Land Transport rides", _FEE),
+    "Driver who pays for petrol": ("6% cashback every time you pump Petrol", _FEE),
+    "Frequent online shopper": ("Cashback on your everyday card spend",
+                                "Your other card transactions earn 0.25% cashback, and the "
+                                "annual fee is waived for the first two years."),
+}
+DEFAULT_TEMPLATE = ("Earn 6% cashback with the OCBC 365 Credit Card", _FEE)
+TEMPLATE_FACT_IDS = ["F1", "F2", "F3", "F10"]
 
 SCHEMA = {
     "type": "object",
@@ -170,8 +196,11 @@ def _driver_label(reason):
 
 
 def target_segments(scored, budget=BUDGET, n=N_SEGMENTS):
-    """The n largest segments in the top `budget` share by uplift, with their top drivers."""
-    top = scored.nlargest(int(len(scored) * budget), "uplift")
+    """The n largest segments in the top `budget` share by uplift, with their top drivers.
+
+    Uses core.select_targets, so only eligible, opted-in customers count.
+    """
+    top = core.select_targets(scored, "uplift", budget)
     segments = []
     for name, size in top["segment"].value_counts().head(n).items():
         grp = top[top["segment"] == name]
@@ -190,7 +219,7 @@ def target_segments(scored, budget=BUDGET, n=N_SEGMENTS):
 def _client():
     """Anthropic client; the key comes from .env (never printed or hard-coded)."""
     load_dotenv(find_dotenv(usecwd=True))
-    return anthropic.Anthropic()
+    return anthropic.Anthropic(timeout=API_TIMEOUT, max_retries=API_RETRIES)
 
 
 def model_id():
@@ -237,35 +266,95 @@ def generate_copy(client, seg, facts, feedback=None):
     return out
 
 
-def write_segment_copy(client, seg, facts, max_attempts=2):
-    """Generate, check, and retry once with the failure reasons if any rule fails."""
-    feedback = None
-    for attempt in range(1, max_attempts + 1):
-        draft = generate_copy(client, seg, facts, feedback)
-        checks = check_copy(draft["subject"], draft["body"], facts)
-        if all(ok for _, ok, _ in checks):
-            break
-        feedback = [c for c in checks if not c[1]]
-    return {**seg, **draft, "attempts": attempt,
+def template_copy(seg, reason):
+    """Fallback copy for a segment when Claude is unavailable, with its check results."""
+    subject, second = TEMPLATES.get(seg["segment"], DEFAULT_TEMPLATE)
+    body = _TEMPLATE_BODY.format(second=second)
+    checks = check_copy(subject, body, load_facts())
+    return {**seg, "subject": subject, "body": body, "fact_ids": TEMPLATE_FACT_IDS,
+            "model": None, "attempts": 0, "source": "template", "fallback_reason": reason,
             "passed": all(ok for _, ok, _ in checks),
             "checks": [{"rule": r, "passed": ok, "reason": why} for r, ok, why in checks]}
 
 
-def build_all(save=True):
-    """Score customers, pick the segments, write and check copy for each; cache the result."""
-    df = core.load_customers()
-    models = core.fit_models(df)
-    scored = core.score_customers(models, df[df["eligible"] == 1])
+def _failure_reason(err):
+    """Short, user-safe description of why a Claude call failed (no keys or payloads)."""
+    if isinstance(err, anthropic.APITimeoutError):
+        return f"timed out after {API_TIMEOUT:g}s"
+    if isinstance(err, anthropic.AuthenticationError):
+        return "API key missing or invalid"
+    if isinstance(err, anthropic.RateLimitError):
+        return "rate limited"
+    if isinstance(err, anthropic.APIConnectionError):
+        return "could not reach the API"
+    if isinstance(err, anthropic.APIStatusError):
+        return f"API error {err.status_code}"
+    return type(err).__name__
+
+
+def write_segment_copy(client, seg, facts, max_attempts=2):
+    """Generate, check, and retry once with the failure reasons if any rule fails.
+
+    Any error from the Claude call (timeout, network, auth, refusal, bad JSON)
+    returns the segment's fallback template instead of raising.
+    """
+    feedback = None
+    try:
+        for attempt in range(1, max_attempts + 1):
+            draft = generate_copy(client, seg, facts, feedback)
+            checks = check_copy(draft["subject"], draft["body"], facts)
+            if all(ok for _, ok, _ in checks):
+                break
+            feedback = [c for c in checks if not c[1]]
+    except Exception as err:  # demo must never crash: fall back, and say why
+        return template_copy(seg, _failure_reason(err))
+    return {**seg, **draft, "attempts": attempt, "source": "claude", "fallback_reason": None,
+            "passed": all(ok for _, ok, _ in checks),
+            "checks": [{"rule": r, "passed": ok, "reason": why} for r, ok, why in checks]}
+
+
+def _payload(results):
+    """Wrap segment results with metadata for the cache file and the app."""
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "facts_file": FACTS_PATH, "budget": BUDGET, "segments": results}
+
+
+def build_all(scored=None, save=True):
+    """Pick the segments, write and check copy for each, and cache the result.
+
+    Pass `scored` (from core.score_customers) to skip refitting the models.
+    After the first failed Claude call, remaining segments use templates
+    straight away rather than waiting on further timeouts. The cache file is
+    only written when every segment came from Claude.
+    """
+    if scored is None:
+        df = core.load_customers()
+        scored = core.score_customers(core.fit_models(df), core.targetable(df))
     facts = load_facts()
-    client = _client()
-    results = [write_segment_copy(client, seg, facts) for seg in target_segments(scored)]
-    payload = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-               "facts_file": FACTS_PATH, "budget": BUDGET, "segments": results}
-    if save:
+    results, down = [], None
+    try:
+        client = _client()
+    except Exception as err:
+        client, down = None, _failure_reason(err)
+    for seg in target_segments(scored):
+        if down:
+            results.append(template_copy(seg, down))
+            continue
+        res = write_segment_copy(client, seg, facts)
+        down = res["fallback_reason"]
+        results.append(res)
+    payload = _payload(results)
+    # Only cache a fully successful run, so a failed regenerate never replaces good copy.
+    if save and all(r["source"] == "claude" for r in results):
         os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
         with open(OUT_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2, ensure_ascii=False)
     return payload
+
+
+def template_payload(scored, reason="no generated copy yet"):
+    """All target segments with fallback templates. No API call (for the app's first run)."""
+    return _payload([template_copy(seg, reason) for seg in target_segments(scored)])
 
 
 def load_cached(path=OUT_PATH):
@@ -289,9 +378,12 @@ def main():
         print("  drivers: " + "; ".join(f"{d['driver']} ({d['share']:.0%})" for d in s["top_drivers"]))
         print(f"  Subject: {s['subject']}")
         print(f"  Body:    {s['body']}")
-        print(f"  Facts cited: {', '.join(s['fact_ids'])}   model: {s['model']}   attempts: {s['attempts']}")
+        src = s["source"] if s["source"] == "claude" else f"template ({s['fallback_reason']})"
+        print(f"  Facts cited: {', '.join(s['fact_ids'])}   source: {src}   model: {s['model']}   "
+              f"attempts: {s['attempts']}")
         _print_checks(s["checks"])
-    print(f"\ncached -> {OUT_PATH}")
+    saved = all(s["source"] == "claude" for s in payload["segments"])
+    print(f"\ncached -> {OUT_PATH}" if saved else "\nnot cached: some segments used fallback templates")
 
     print("\n=== Deliberately bad copy (should fail) ===")
     bad_subject = "Guaranteed 10% cashback on online shopping!"

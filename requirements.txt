@@ -7,6 +7,7 @@ plotly==7.1.0           # evaluation bar chart
 faker==40.40.0          # synthetic display names (never a model input)
 anthropic==1.11.0       # Claude writes the offer copy
 python-dotenv==1.2.4    # reads ANTHROPIC_API_KEY (and OCBC_CAMPAIGN_MODEL) from .env
+pytest==9.1.1           # guardrail tests in tests/ (dev only)
 
 # System tool, not pip: scripts/build_product_facts.py reads the T&C PDF with
 # `pdftotext` from poppler (macOS: brew install poppler). Only needed to rebuild

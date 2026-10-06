@@ -24,6 +24,7 @@ BASELINE_RATE = 0.03        # ASSUMPTION: average take-up without an offer
 OFFER_LIFT = 0.06           # ASSUMPTION: extra take-up for persuadables when offered
 HIGH_SPEND = 1_200          # S$/month total card spend. ASSUMPTION, not an OCBC figure
 HIGH_APP_LOGINS = 10        # logins/month. ASSUMPTION
+OPT_IN_RATE = 0.85          # ASSUMPTION: share who consented to marketing (PDPA), invented
 
 
 def _sigmoid(x):
@@ -121,7 +122,20 @@ def generate_customers(n=100_000, seed=42):
     df.insert(0, "name", [fake.name() for _ in range(n)])
     df.insert(0, "customer_id", [f"C{i:05d}" for i in range(1, n + 1)])
     df["eligible"] = is_eligible(df).astype(int)
+    df["marketing_opt_in"] = marketing_opt_in(len(df), seed)
     return df
+
+
+def marketing_opt_in(n, seed):
+    """1 if the customer consented to marketing messages, else 0.
+
+    ASSUMPTION: PDPA requires consent before sending marketing. Here it is a
+    random 85% with no link to other traits, and the Do Not Call registry is
+    not modelled. Drawn from its own seeded generator so adding it left every
+    other column unchanged.
+    """
+    rng = np.random.default_rng(seed + 1_000)
+    return (rng.random(n) < OPT_IN_RATE).astype(int)
 
 
 def _baseline_prob(df):
@@ -137,10 +151,13 @@ def _baseline_prob(df):
 
 
 def simulate_campaign(df, seed=7):
-    """Add a past 50/50 randomised test among eligible customers.
+    """Add a past 50/50 randomised test among eligible, opted-in customers.
+
+    Customers without marketing consent were never in the test (they could not
+    have been sent an offer), so nothing trained or evaluated on it includes them.
 
     Adds columns:
-      in_test      1 if the customer was in the test (eligible only)
+      in_test      1 if the customer was in the test (eligible AND opted in)
       treated      1 if they got the offer (random, 50/50 within the test)
       persuadable  planted ground truth: high spend AND high app engagement
       true_uplift  planted effect of the offer. Used for sanity checks only,
@@ -149,7 +166,7 @@ def simulate_campaign(df, seed=7):
     """
     rng = np.random.default_rng(seed)
     df = df.copy()
-    df["in_test"] = df["eligible"]
+    df["in_test"] = df["eligible"] * df["marketing_opt_in"]
     df["treated"] = ((rng.random(len(df)) < 0.5) & (df["in_test"] == 1)).astype(int)
     df["persuadable"] = ((df["spend_total"] >= HIGH_SPEND)
                          & (df["app_logins_month"] >= HIGH_APP_LOGINS)).astype(int)
@@ -166,7 +183,8 @@ def main():
     df.to_csv(OUT_PATH, index=False)
     test = df[df["in_test"] == 1]
     print(f"wrote {OUT_PATH}: {df.shape[0]:,} rows x {df.shape[1]} cols")
-    print(f"eligible / in test: {len(test):,} ({len(test) / len(df):.0%})")
+    print(f"eligible: {df['eligible'].sum():,}  opted in: {df['marketing_opt_in'].sum():,}  "
+          f"in test (both): {len(test):,} ({len(test) / len(df):.0%})")
     print(f"treated / control: {test['treated'].sum():,} / {(1 - test['treated']).sum():,}")
     print(f"persuadable share of test: {test['persuadable'].mean():.1%}\n")
     print(df.head(5).to_string(max_colwidth=18), "\n")
